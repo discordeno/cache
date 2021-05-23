@@ -1,4 +1,12 @@
 import { SECRET_KEY } from "./configs.ts";
+import clear from "./src/clear.ts";
+import deleteOne from "./src/delete.ts";
+import forEach from "./src/filter.ts";
+import filter from "./src/filter.ts";
+import get from "./src/get.ts";
+import has from "./src/has.ts";
+import set from "./src/set.ts";
+import size from "./src/size.ts";
 
 // Start listening on localhost.
 const server = Deno.listen({ port: 8086 });
@@ -23,16 +31,37 @@ for await (const conn of server) {
 
       const json = await requestEvent.request.json();
 
+      let response;
+
       switch (json.type) {
         case "get":
-
+          response = get(json.table, json.key);
           break;
         case "set":
-          
+          set(json.table, json.key, json.payload);
+          break;
+        case "clear":
+          clear(json.table);
+          break;
+        case "delete":
+          deleteOne(json.table, json.key);
+          break;
+        case "filter":
+          response = filter(json.table, json.payload);
+          break;
+        case "forEach":
+          forEach(json.table, json.payload);
+          break;
+        case "has":
+          response = has(json.table, json.key);
+          break;
+        case "size":
+          response = size(json.table);
           break;
       }
+
       requestEvent.respondWith(
-        new Response(JSON.stringify({ success: true }), {
+        new Response(JSON.stringify({ success: true, response }), {
           status: 200,
         })
       );
